@@ -19,14 +19,14 @@ RUN xcaddy build \
 	--with github.com/dunglas/vulcain/caddy
 
 # Prod image
-FROM php:8.2-fpm-alpine AS app_php
+FROM php:7.4-fpm-alpine AS app_php
 
 # Allow to use development versions of Symfony
 ARG STABILITY="stable"
 ENV STABILITY ${STABILITY}
 
 # Allow to select Symfony version
-ARG SYMFONY_VERSION=""
+ARG SYMFONY_VERSION="4.4"
 ENV SYMFONY_VERSION ${SYMFONY_VERSION}
 
 ENV APP_ENV=prod
@@ -51,9 +51,17 @@ RUN set -eux; \
 		intl \
 		opcache \
 		zip \
+    	mysqli \
+		pdo_mysql \
     ;
 
 ###> recipes ###
+###> doctrine/doctrine-bundle ###
+RUN apk add --no-cache --virtual .pgsql-deps postgresql-dev; \
+	docker-php-ext-install -j$(nproc) pdo_pgsql; \
+	apk add --no-cache --virtual .pgsql-rundeps so:libpq.so.5; \
+	apk del .pgsql-deps
+###< doctrine/doctrine-bundle ###
 ###< recipes ###
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
@@ -100,6 +108,15 @@ RUN set -eux; \
 		composer run-script --no-dev post-install-cmd; \
 		chmod +x bin/console; sync; \
     fi
+
+# install bash
+RUN apk add --no-cache bash
+
+# install symfony-cli
+RUN wget https://get.symfony.com/cli/installer -O - | bash
+RUN mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
+
+#
 
 # Dev image
 FROM app_php AS app_php_dev
