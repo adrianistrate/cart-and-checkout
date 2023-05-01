@@ -116,7 +116,8 @@ RUN apk add --no-cache bash
 RUN wget https://get.symfony.com/cli/installer -O - | bash
 RUN mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
 
-#
+# add yarn
+RUN apk add --no-cache yarn
 
 # Dev image
 FROM app_php AS app_php_dev
