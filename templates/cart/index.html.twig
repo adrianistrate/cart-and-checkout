@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello CartController!{% endblock %}
+
+{% block body %}
+    <h1>Cart</h1>
+
+    {% if cart.cartItems|length %}
+        <ul class="list-group mt-5">
+            {% for cartItem in cart.cartItems %}
+                {{ include ('product/_product_list_item.html.twig', {product: cartItem.product, quantity: cartItem.quantity, total: cartItem.total}) }}
+            {% endfor %}
+        </ul>
+
+        <div class="d-flex flex-row justify-content-between">
+            <div class="fw-bold">
+                Grand Total
+            </div>
+
+            <div>
+                ${{ cart.grandTotal|number_format(2) }}
+            </div>
+        </div>
+
+        <div class="d-flex flex-row justify-content-between mt-5 align-items-center">
+            <form method="POST" action="{{ path('app_cart_checkout') }}">
+                <input type="submit" value="Checkout" class="btn btn-primary ms-3 {% if get_cart_grand_total() > app.user.credit %}disabled{% endif %}" {% if get_cart_grand_total() > app.user.credit %}disabled{% endif %}>
+            </form>
+
+            <a href="{{ path('app_products') }}">
+                Continue Shopping
+            </a>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            No products in cart.
+
+            <a href="{{ path('app_products') }}">
+                Continue Shopping
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}

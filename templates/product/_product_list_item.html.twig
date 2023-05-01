@@ -1,0 +1,25 @@
+<li class="list-group-item d-flex flex-row justify-content-between border-1 border mb-3 rounded rounded-1 p-3 align-items-center">
+    <a href="{{ path('app_product_view', {id: product.id}) }}" class="font-weight-bold">
+        {{ product.name }}
+    </a>
+
+    <div>
+        ${{ product.price|number_format(2) }}
+    </div>
+
+    {% if quantity is defined and total is defined %}
+        <div>
+            x
+        </div>
+        <div>
+            <form method="POST" action="{{ path('app_cart') }}">
+                <input type="hidden" name="product_id" value="{{ product.id }}" />
+                <input value="{{ quantity }}" class="form-control cart-item-quantity" type="number" name="quantity" />
+                <input type="submit" value="Update quantity" class="btn btn-sm btn-success mt-3" />
+            </form>
+        </div>
+        <div>
+            = <b>${{ total|number_format(2) }}</b>
+        </div>
+    {% endif %}
+</li>

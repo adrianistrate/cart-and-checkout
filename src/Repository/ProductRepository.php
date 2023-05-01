@@ -6,6 +6,7 @@ use App\Entity\Product;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -45,6 +46,18 @@ class ProductRepository extends ServiceEntityRepository
         if ($flush) {
             $this->_em->flush();
         }
+    }
+
+    public function getQueryBuilderWithSearch(?string $keyword): QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('p');
+
+        if ($keyword) {
+            $qb->andWhere('p.name LIKE :keyword OR p.description LIKE :keyword')
+                ->setParameter('keyword', '%' . $keyword . '%');
+        }
+
+        return $qb;
     }
 
     // /**
