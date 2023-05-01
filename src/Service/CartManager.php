@@ -44,7 +44,7 @@ class CartManager
             $cartItem = new CartItem();
             $cartItem->setCart($cart);
             $cartItem->setProduct($product);
-            $cartItem->setQuantity(1);
+            $cartItem->setQuantity($quantity ?: 1);
         }
 
         $this->entityManager->persist($cartItem);

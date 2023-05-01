@@ -20,28 +20,29 @@ class OrderCompletedHandler implements MessageHandlerInterface
         $this->mailerManager = $mailerManager;
         $this->cartManager = $cartManager;
     }
+
     public function __invoke(OrderCompleted $orderCompleted)
     {
         $cart = $this->cartRepository->find($orderCompleted->getCartId());
 
         $owners = [];
-        foreach($cart->getCartItems() as $cartItem) {
+        foreach ($cart->getCartItems() as $cartItem) {
             $product = $cartItem->getProduct();
             $owner = $product->getOwner();
 
-            if($owner) {
+            if ($owner) {
                 $products = $owners[$owner->getId()]['products'] ?? [];
                 $products[] = $product;
 
                 $owners[$owner->getId()] = [
                     'owner' => $owner,
-                    'products' => $products
+                    'products' => $products,
                 ];
             }
         }
 
-        if(count($owners)) {
-            foreach($owners as $owner) {
+        if (count($owners)) {
+            foreach ($owners as $owner) {
                 $this->mailerManager->notifyOwnersOnOrderCompleted($owner['owner'], $owner['products']);
             }
         }
