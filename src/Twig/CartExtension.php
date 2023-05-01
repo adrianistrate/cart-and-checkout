@@ -35,7 +35,7 @@ class CartExtension extends AbstractExtension
 
     public function getNbrCartItems(): int
     {
-        return $this->cartManager->getNbrCartItems($this->security->getUser());
+        return $this->cartManager->getCart($this->security->getUser())->getNbrCartItems();
     }
 
     public function getCartGrandTotal(): float

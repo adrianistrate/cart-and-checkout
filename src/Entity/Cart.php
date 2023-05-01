@@ -15,6 +15,10 @@ class Cart
 {
     use TimestampableEntity;
 
+    public const STATUS_NEW = 'new';
+    public const STATUS_TO_BE_PROCESSED = 'to_be_processed';
+    public const STATUS_COMPLETED = 'completed';
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
@@ -32,6 +36,11 @@ class Cart
      * @ORM\OneToMany(targetEntity=CartItem::class, mappedBy="cart", orphanRemoval=true)
      */
     private $cartItems;
+
+    /**
+     * @ORM\Column(type="string", length=15, options={"default": "new"})
+     */
+    private $status = self::STATUS_NEW;
 
     public function __construct()
     {
@@ -85,8 +94,25 @@ class Cart
         return $this;
     }
 
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
     public function getGrandTotal(): float
     {
         return array_reduce($this->getCartItems()->toArray(), static fn(int $carry, CartItem $cartItem) => $carry + $cartItem->getQuantity() * $cartItem->getProduct()->getPrice(), 0);
+    }
+
+    public function getNbrCartItems(): int
+    {
+        return array_reduce($this->getCartItems()->toArray(), static fn (int $carry, CartItem $cartItem) => $carry + $cartItem->getQuantity(), 0);
     }
 }

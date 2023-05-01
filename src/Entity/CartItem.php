@@ -5,9 +5,11 @@ namespace App\Entity;
 use App\Repository\CartItemRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Doctrine\ORM\Mapping\UniqueConstraint;
 
 /**
  * @ORM\Entity(repositoryClass=CartItemRepository::class)
+ * @ORM\Table(name="cart_item", uniqueConstraints={@UniqueConstraint(name="cart_product_unique", columns={"cart_id", "product_id"})})
  */
 class CartItem
 {

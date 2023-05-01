@@ -6,21 +6,25 @@ use App\Entity\Cart;
 use App\Entity\CartItem;
 use App\Entity\Product;
 use App\Entity\User;
+use App\Message\OrderCompleted;
 use App\Repository\CartItemRepository;
 use App\Repository\CartRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class CartManager
 {
     private CartRepository $cartRepository;
     private EntityManagerInterface $entityManager;
     private CartItemRepository $cartItemRepository;
+    private MessageBusInterface $messageBus;
 
-    public function __construct(CartRepository $cartRepository, CartItemRepository $cartItemRepository, EntityManagerInterface $entityManager)
+    public function __construct(CartRepository $cartRepository, CartItemRepository $cartItemRepository, EntityManagerInterface $entityManager, MessageBusInterface $messageBus)
     {
         $this->cartRepository = $cartRepository;
         $this->cartItemRepository = $cartItemRepository;
         $this->entityManager = $entityManager;
+        $this->messageBus = $messageBus;
     }
 
     public function addToCart(User $user, Product $product, ?int $quantity): void
@@ -47,13 +51,15 @@ class CartManager
         $this->entityManager->flush();
     }
 
-    public function getCart(User $user)
+    public function getCart(User $user): Cart
     {
-        $cart = $this->cartRepository->findOneBy(['user' => $user]);
+        $cart = $this->cartRepository->findOneBy(['user' => $user, 'status' => Cart::STATUS_NEW]);
 
         if(!$cart) {
             $cart = new Cart();
-            $cart->setUser($user);
+            $cart
+                ->setUser($user)
+                ->setStatus(Cart::STATUS_NEW);
 
             $this->entityManager->persist($cart);
             $this->entityManager->flush();
@@ -62,8 +68,27 @@ class CartManager
         return $cart;
     }
 
-    public function getNbrCartItems(User $User): int
+    public function checkout(Cart $cart): void
     {
-        return array_reduce($this->getCart($User)->getCartItems()->toArray(), static fn (int $carry, CartItem $cartItem) => $carry + $cartItem->getQuantity(), 0);
+        /** @var User $user */
+        $user = $cart->getUser();
+
+        $cart->setStatus(Cart::STATUS_TO_BE_PROCESSED);
+        $user->setCredit($user->getCredit() - $cart->getGrandTotal());
+
+        $this->entityManager->persist($user);
+        $this->entityManager->persist($cart);
+        $this->entityManager->flush();
+
+        $orderCompleted = new OrderCompleted($cart->getId());
+        $this->messageBus->dispatch($orderCompleted);
+    }
+
+    public function complete(Cart $cart): void
+    {
+        $cart->setStatus(Cart::STATUS_COMPLETED);
+
+        $this->entityManager->persist($cart);
+        $this->entityManager->flush();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Repository\ProductRepository;
 use App\Service\CartManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -54,8 +55,19 @@ class CartController extends AbstractController
     /**
      * @Route("/cart/checkout", name="app_cart_checkout", methods={"POST"})
      */
-    public function checkout(): Response
+    public function checkout(CartManager $cartManager): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+        $cart = $cartManager->getCart($user);
+
+        if($cart->getGrandTotal() > $user->getCredit()) {
+            $this->addFlash('error', 'Insufficient credit!');
+            return $this->redirectToRoute('app_cart_show');
+        }
+
+        $cartManager->checkout($cart);
+
         return $this->render('cart/checkout.html.twig');
     }
 }
