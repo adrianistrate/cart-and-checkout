@@ -20,6 +20,15 @@ yarn install
 yarn dev --watch
 ```
 
+## Open up a new PHP container
+
+#### Needed for sending out the emails
+
+```
+make in-php
+symfony console messenger:consume --env=dev -vvv
+```
+
 ## In browser
 
 Go to: 
